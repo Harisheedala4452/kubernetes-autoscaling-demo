@@ -1,0 +1,16 @@
+{
+  "title": "Kubernetes Autoscaling Demo",
+  "description": "Placeholder dashboard for pod CPU, memory, replica count, and HPA desired replicas.",
+  "panels": [
+    {
+      "title": "Pod CPU Usage",
+      "type": "timeseries",
+      "note": "Add a PromQL query for per-pod CPU usage after Prometheus is installed."
+    },
+    {
+      "title": "HPA Desired Replicas",
+      "type": "timeseries",
+      "note": "Add a PromQL query for kube_horizontalpodautoscaler_status_desired_replicas."
+    }
+  ]
+}

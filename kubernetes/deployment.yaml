@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-autoscaling-app
+  namespace: autoscaling-demo
+  labels:
+    app: flask-autoscaling-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flask-autoscaling-app
+  template:
+    metadata:
+      labels:
+        app: flask-autoscaling-app
+    spec:
+      containers:
+        - name: flask-app
+          image: kubernetes-autoscaling-demo:local
+          # Never tells Minikube to use the locally built image instead of
+          # trying to pull it from an external registry.
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 5000
+          envFrom:
+            - configMapRef:
+                name: flask-autoscaling-config
+          resources:
+            # HPA needs CPU requests so it can calculate utilization.
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 10001
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            # Gunicorn and Python tooling may need temporary files. Mounting
+            # /tmp keeps the root filesystem read-only while preserving runtime safety.
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
